@@ -4,16 +4,21 @@
 #include <vector>
 #include <stdio.h>
 
+const int debug = 0;
+
 namespace lexi {
     
+using std::vector;
 typedef std::vector<char> buffer_t;
+
+class RegParser;
 
 class Lex {
 public:
-    Lex (buffer_t& in, buffer_t& out);
+    Lex (buffer_t in, buffer_t& out);
+
     int parse();
 
-private:
     enum state_t {
         IN_CDECLARATION,
         IN_DEFINITION,
@@ -22,15 +27,16 @@ private:
         IN_INVALID
     } state;
 
-    buffer_t& in;
     buffer_t& out;
+    buffer_t in;
 
     /* parsing phases */
+
     // parse c-declaration and definitions section
-    int parse_definitions(size_t i);
+    int parse_definitions(RegParser &t, size_t i);
 
     // parse rules section
-    int parse_rules(size_t i);
+    int parse_rules(RegParser &t, size_t i);
 
     // used for iterating buffer
     enum iterate_t {
@@ -39,6 +45,7 @@ private:
         CONTINUE
     };
     inline iterate_t next(size_t i);
+    inline void increment(size_t &i);
 
     // move to next state
     inline unsigned state_increment();
@@ -50,6 +57,7 @@ private:
     // buffer operations
     size_t getline(size_t i); /* get this line's end offset */
     size_t next_line(size_t i); /* skip to next line's start */
+    size_t get_id(size_t i);
     size_t skip_spaces(size_t i);
     size_t skip_comments(size_t i);
 

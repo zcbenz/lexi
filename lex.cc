@@ -1,34 +1,39 @@
-#include "lex.h"
 #include <ctype.h>
 #include <string.h>
 #include <algorithm>
 
+#include "lex.h"
+#include "reg_parser.h"
+
 namespace lexi {
 
-Lex::Lex(buffer_t& in, buffer_t& out)
+Lex::Lex(buffer_t in, buffer_t& out)
     : state(IN_DEFINITION), in(in), out(out)
 {
 }
 
 int Lex::parse()
 {
+    RegParser t(out);
     size_t i = 0;
 
-    i = parse_definitions(i);
+    i = parse_definitions(t, i);
     if (i < 0) {
         fprintf (stderr, "Error occurred at: %d\n", -i);
         return -i;
     }
 
     if (state == IN_RULES) {
-        i = parse_rules(i);
+        i = parse_rules(t, i);
     } else {
         fprintf (stderr, "Rules section is required");
         return i; 
     }
+
+    t.print();
 }
 
-int Lex::parse_definitions(size_t i)
+int Lex::parse_definitions(RegParser &t, size_t i)
 {
     size_t end = getline(i);
     iterate_t it = next(i);
@@ -37,6 +42,7 @@ int Lex::parse_definitions(size_t i)
         // definition section ended
         if (it == NEXT) {
             state_increment();
+            i = next_line(i);
             break;
         }
 
@@ -56,24 +62,44 @@ int Lex::parse_definitions(size_t i)
                     std::copy(mark, in.begin() + i, std::back_inserter(out));
 
                     i = next_line(i);
+                    end = getline(i);
                     break;
                 }
             }
         }
 
-        // /*
-        // skip comments
-        // */
-        i = skip_comments(i);
-
         // normal definitions
+        if (i < end)
+            t.definition(in.begin() + i, in.begin() + end);
     }
 
     return i;
 }
 
-int Lex::parse_rules(size_t i)
+int Lex::parse_rules(RegParser &t, size_t i)
 {
+    size_t end = getline(i);
+    iterate_t it = next(i);
+
+    for (; it != END; i = next_line(i), end = getline(i), it = next(i)) {
+        if (it == NEXT) {
+            state_increment();
+            i = next_line(i);
+            break;
+        }
+
+        if (i < end) {
+            buffer_t::iterator ibegin = in.begin() + i;
+            buffer_t::iterator iend = in.begin() + end;
+            if (std::find(ibegin, iend, '{') != iend) {
+                iend = std::find(iend, in.end(), '}');
+                i = iend - in.begin();
+            }
+
+            t.rule(ibegin, iend);
+        }
+    }
+
     return i;
 }
 
@@ -89,6 +115,12 @@ Lex::iterate_t Lex::next(size_t i)
         return NEXT;
 
     return CONTINUE;
+}
+
+void Lex::increment(size_t &i)
+{
+    ++i;
+    i = skip_comments(i);
 }
 
 unsigned Lex::state_increment()
@@ -146,13 +178,23 @@ size_t Lex::next_line(size_t i)
     return i;
 }
 
+size_t Lex::get_id(size_t i)
+{
+    while (i < in.size() && (isalnum(in[i]) || in[i] == '_'))
+        ++i;
+
+    return i;
+}
+
 size_t Lex::skip_spaces(size_t i)
 {
-    while (i < in.size() && isspace(in[i])) ++i;
+    while (i < in.size() && isblank(in[i])) ++i;
 }
 
 size_t Lex::skip_comments(size_t i)
 {
+    i = skip_spaces(i);
+
     size_t old = i;
     size_t end = getline(i);
     while (i < end) {

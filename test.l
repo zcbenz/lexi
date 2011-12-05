@@ -1,15 +1,10 @@
-/* not shown */
 
-/*
-%{
-    not to be shown
-%}
-*/
-
-%{
-    /* OK */ /* be shown */
-    /* OK */ one line
-%}
+expr1 [ab]*abb
 
 %%
+
+{expr1}  {
+    printf("done");
+}
+
 %%

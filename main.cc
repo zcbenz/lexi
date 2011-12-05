@@ -1,4 +1,5 @@
 #include "lex.h"
+
 #include <stdio.h>
 #include <algorithm>
 #include <iterator>
@@ -14,6 +15,7 @@ int main(int argc, char *argv[])
 
     lexi::Lex(in, out).parse();
 
+    printf ("result:\n");
     out.push_back('\0');
     fputs(out.data(), stdout);
 
