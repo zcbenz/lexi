@@ -34,19 +34,7 @@ static char add_slash(char c) {
     return c;
 }
 
-string Lexer::getAction()
-{
-    string value;
-    value.reserve(end - begin);
-
-    for (; begin < end; ++begin) {
-        value.push_back(*begin);
-    }
-
-    return value;
-}
-
-string Lexer::getDifiName()
+string RegLexer::getDifiName()
 {
     string value;
 
@@ -60,7 +48,7 @@ string Lexer::getDifiName()
     return value;
 }
 
-bool Lexer::skip_blanks()
+bool RegLexer::skip_blanks()
 {
     for (; begin < end; ++begin) {
         if (isblank(*begin))
@@ -75,7 +63,7 @@ bool Lexer::skip_blanks()
         return true;
 }
 
-Token Lexer::dealChar()
+Token RegLexer::dealChar()
 {
     char value;
 
@@ -97,7 +85,7 @@ Token Lexer::dealChar()
     }
 }
 
-Token Lexer::dealString()
+Token RegLexer::dealString()
 {
     string value;
 
@@ -119,7 +107,7 @@ Token Lexer::dealString()
     return Token(TOKEN_STRING, value);
 }
 
-Token Lexer::dealSet()
+Token RegLexer::dealSet()
 {
     set<char> elems;
 
@@ -158,7 +146,7 @@ Token Lexer::dealSet()
     return Token(elems);
 }
 
-Token Lexer::dealDif()
+Token RegLexer::dealDif()
 {
     string value;
 
@@ -178,7 +166,7 @@ Token Lexer::dealDif()
     return Token(TOKEN_DIFI, value);
 }
 
-Token Lexer::next()
+Token RegLexer::next()
 {
     if (isspace(*begin))
         return Token(FINISH_CHAR);

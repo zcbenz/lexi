@@ -44,7 +44,7 @@ struct Token {
     }
 };
 
-class Lexer {
+class RegLexer {
 public:
     void init(buffer_t::const_iterator begin,
               buffer_t::const_iterator end)
@@ -57,7 +57,10 @@ public:
     bool skip_blanks();
 
     string getDifiName();
-    string getAction();
+
+    buffer_t get_action() {
+        return buffer_t(begin, end);
+    }
 
 private:
     buffer_t::const_iterator begin, end;
