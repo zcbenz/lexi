@@ -102,6 +102,10 @@ void RegParser::generate_dfa()
     }
 }
 
+void RegParser::generate_program()
+{
+}
+
 RegNode RegParser::E()
 {
     if (debug) fprintf (stderr, "Enter E\n");
@@ -220,17 +224,17 @@ RegNode RegParser::F()
         id = positions.size();
 
         if (peek.tag == TOKEN_CHAR) {
-            if (debug) fprintf (stderr, "Leaf char: %c\n", peek.ch);
+            if (debug) fprintf (stderr, "Leaf char: %c %d\n", peek.ch, id);
 
             symbol_follows[peek.ch].insert(id);
             positions.push_back(peek.ch);
         } else if (peek.tag == FINISH_CHAR) {
-            if (debug) fprintf (stderr, "Leaf finish\n");
+            if (debug) fprintf (stderr, "Leaf finish %d\n", id);
 
             symbol_follows[-1].insert(id);
             positions.push_back(-1);
         } else {
-            if (debug) fprintf (stderr, "Leaf symbol: %c\n", peek.tag);
+            if (debug) fprintf (stderr, "Leaf symbol: %c %d\n", peek.tag, id);
 
             symbol_follows[peek.tag].insert(id);
             positions.push_back(peek.tag);
@@ -330,11 +334,11 @@ void RegParser::print() const
     for (postable_t::const_iterator it = symbol_follows.begin();
          it != symbol_follows.end(); ++it)
     {
-        char buffer[32]; int k = 0;
+        char buffer[512]; int k = 0;
         for (pos_t::const_iterator j = it->second.begin();
              j != it->second.end(); ++j)
         {
-            sprintf (buffer + k * 2, "%d ", *j);
+            sprintf (buffer + k * 3, "%2d ", *j);
             ++k;
         }
         printf("|    %c   | %15s |\n", (char)(it->first > 0 ? it->first : '$'), buffer);
@@ -347,11 +351,11 @@ void RegParser::print() const
     for (postable_t::const_iterator it = followpos.begin();
          it != followpos.end(); ++it)
     {
-        char buffer[32] = { 0 }; int k = 0;
+        char buffer[512] = { 0 }; int k = 0;
         for (pos_t::const_iterator j = it->second.begin();
              j != it->second.end(); ++j)
         {
-            sprintf (buffer + k * 2, "%d ", *j);
+            sprintf (buffer + k * 3, "%2d ", *j);
             ++k;
         }
         printf("|   %3d  | %15s |\n", it->first, buffer);
@@ -364,11 +368,11 @@ void RegParser::print() const
     for (vector<DState>::const_iterator it = graph.DStates.begin();
          it != graph.DStates.end(); ++it)
     {
-        char buffer[32] = { 0 }; int k = 0;
+        char buffer[512] = { 0 }; int k = 0;
         for (pos_t::const_iterator j = it->positions.begin();
              j != it->positions.end(); ++j)
         {
-            sprintf (buffer + k * 2, "%d ", *j);
+            sprintf (buffer + k * 3, "%2d ", *j);
             ++k;
         }
         printf("|   %3d  | %15s |\n", it->id, buffer);

@@ -4,7 +4,7 @@
 #include <vector>
 #include <stdio.h>
 
-const int debug = 0;
+const int debug = 1;
 
 namespace lexi {
     

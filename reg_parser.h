@@ -37,6 +37,7 @@ public:
               buffer_t::const_iterator end);
 
     void generate_dfa();
+    void generate_program();
 
     // print followpos table and symbol_follows
     void print() const;

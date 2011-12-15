@@ -2,12 +2,18 @@
 // In head
 %}
 
-expr1 [ab]*abb
-
 %%
 
-{expr1}  {
-    printf("done");
+if {
+    printf("if");
+}
+
+[ ]* {
+
+}
+
+else {
+    printf("else");
 }
 
 %%

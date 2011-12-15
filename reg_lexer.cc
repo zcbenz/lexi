@@ -1,4 +1,8 @@
 #include <ctype.h>
+#include <algorithm>
+#include <utility>
+#include <iterator>
+
 #include "reg_lexer.h"
 
 namespace lexi {
@@ -109,7 +113,7 @@ Token RegLexer::dealString()
 
 Token RegLexer::dealSet()
 {
-    set<char> elems;
+    vector<char> elems;
 
     for (; begin < end; ++begin) {
         if (*begin == ']') {
@@ -130,20 +134,22 @@ Token RegLexer::dealSet()
 
             // insert a-z or 0-9 or A-Z
             for (char tail = *begin; tail > head; tail--) {
-                elems.insert(tail);
+                elems.push_back(tail);
             }
-
-            break;
         } else if (*begin =='\\') {
             ++begin;
 
-            elems.insert(add_slash(*begin));
+            elems.push_back(add_slash(*begin));
         } else {
-            elems.insert(*begin);
+            elems.push_back(*begin);
         }
     }
 
-    return Token(elems);
+    Token tok(TOKEN_SET);
+    std::copy(elems.begin(), elems.end(),
+              std::inserter(tok.elems, tok.elems.begin()));
+
+    return tok;
 }
 
 Token RegLexer::dealDif()
