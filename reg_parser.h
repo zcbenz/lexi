@@ -26,10 +26,6 @@ struct RegNode {
 
 class RegParser {
 public:
-    RegParser(buffer_t &out) : out(out)
-    {
-    }
-
     void definition(buffer_t::const_iterator begin,
                     buffer_t::const_iterator end);
 
@@ -42,12 +38,16 @@ public:
     // print followpos table and symbol_follows
     void print() const;
 
+public:
+    DFAGraph graph;
+
+    positions_t positions;
+    postable_t symbol_follows;
+
 private:
     typedef map<string, RegNode> defis_t;
 
     postable_t followpos;
-    postable_t symbol_follows;
-    positions_t positions;
     defis_t defis;
 
     RegNode E();
@@ -63,14 +63,10 @@ private:
     RegNode node_closure(const RegNode& node);
 
 private:
-    buffer_t &out;
-
     RegLexer lex;
     Token peek;
 
     RegNode root;
-
-    DFAGraph graph;
 };
 
 } /* lexi */

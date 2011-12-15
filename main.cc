@@ -9,15 +9,18 @@ int main(int argc, char *argv[])
     lexi::buffer_t in, out;
 
     // read file
-    FILE *file = fopen("test.l", "r"); char ch;
+    FILE *file = fopen("test.l", "r+"); char ch;
     while ((ch = fgetc(file)) != EOF) in.push_back(ch);
     fclose(file);
 
-    lexi::Lex(in, out).parse();
+    lexi::Lex parser(in, out);
+    parser.parse();
+    parser.generate_program();
 
-    printf ("result:\n");
+    file = fopen("test.l.c", "w+");
     out.push_back('\0');
-    fputs(out.data(), stdout);
+    fputs(out.data(), file);
+    fclose(file);
 
     return 0;
 }

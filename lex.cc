@@ -1,9 +1,9 @@
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 #include <algorithm>
 
 #include "lex.h"
-#include "reg_parser.h"
 
 namespace lexi {
 
@@ -14,31 +14,44 @@ Lex::Lex(buffer_t in, buffer_t& out)
 
 int Lex::parse()
 {
-    RegParser t(out);
     size_t i = 0;
 
-    i = parse_definitions(t, i);
+    i = parse_definitions(i);
     if (i < 0) {
         fprintf (stderr, "Error occurred at: %d\n", -i);
         return -i;
     }
 
     if (state == IN_RULES) {
-        i = parse_rules(t, i);
+        i = parse_rules(i);
     } else {
         fprintf (stderr, "Rules section is required");
         return i; 
     }
 
     if (state == IN_PROGRAM) {
-        std::copy(in.begin() + i, in.end(), std::back_inserter(out));
+        std::copy(in.begin() + i, in.end(), std::back_inserter(main));
     }
 
     t.generate_dfa();
     t.print();
 }
 
-int Lex::parse_definitions(RegParser &t, size_t i)
+void Lex::generate_program()
+{
+    file_to_buffer("1.tpl");
+    std::copy(header.begin(), header.end(), std::back_inserter(out));
+    file_to_buffer("2.tpl");
+    std::copy(main.begin(), main.end(), std::back_inserter(out));
+    file_to_buffer("3.tpl");
+    DTran_to_buffer();
+    FinishStates_to_buffer();
+    file_to_buffer("4.tpl");
+    Actions_to_buffer();
+    file_to_buffer("5.tpl");
+}
+
+int Lex::parse_definitions(size_t i)
 {
     size_t end = getline(i);
     iterate_t it = next(i);
@@ -64,7 +77,7 @@ int Lex::parse_definitions(RegParser &t, size_t i)
 
                 end = getline(i);
                 if (compare_next(i, end, "%}")) {
-                    std::copy(mark, in.begin() + i, std::back_inserter(out));
+                    std::copy(mark, in.begin() + i, std::back_inserter(header));
 
                     i = next_line(i);
                     end = getline(i);
@@ -81,7 +94,7 @@ int Lex::parse_definitions(RegParser &t, size_t i)
     return i;
 }
 
-int Lex::parse_rules(RegParser &t, size_t i)
+int Lex::parse_rules(size_t i)
 {
     size_t end = getline(i);
     iterate_t it = next(i);
@@ -96,11 +109,12 @@ int Lex::parse_rules(RegParser &t, size_t i)
         if (i < end) {
             buffer_t::iterator ibegin = in.begin() + i;
             buffer_t::iterator iend = in.begin() + end;
-            if (std::find(ibegin, iend, '{') != iend) {
-                iend = std::find(iend, in.end(), '}');
-                i = iend - in.begin();
-            }
 
+            // TODO
+            // expand multiple lines for {
+            // }
+
+            i = iend - in.begin();
             t.rule(ibegin, iend);
         }
     }
@@ -216,6 +230,122 @@ size_t Lex::skip_comments(size_t i)
     }
 
     return old;
+}
+
+void Lex::file_to_buffer(const char *name)
+{
+    FILE *file = fopen(name, "r+"); char ch;
+    while ((ch = fgetc(file)) != EOF) out.push_back(ch);
+    fclose(file);
+}
+
+void Lex::string_to_buffer(const char *str)
+{
+    while(*str) out.push_back(*str++);
+}
+
+void Lex::vector_to_buffer(const vector<int>& vec)
+{
+    char buffer[64];
+    for (int i = 0; i < vec.size(); i++) {
+        snprintf(buffer, 64, "%2d, ", vec[i]);
+        string_to_buffer(buffer);
+
+        if ((i + 1) % 8 == 0) out.push_back('\n');
+    }
+    out.push_back('\n');
+}
+
+void Lex::DTran_to_buffer()
+{
+    char buffer[512];
+    const char *head = "static int lexi_DTran[%d][%d] = {\n";
+    const char *tail = "};\n\n";
+
+    snprintf(buffer, 512, head, t.graph.DStates.size(), MAX_SYMBOL_NUMBER);
+    string_to_buffer(buffer);
+
+    for (int i = 0; i < t.graph.DStates.size(); i++) {
+        snprintf(buffer, 512, "{\n");
+        string_to_buffer(buffer);
+
+        vector<int> plain(MAX_SYMBOL_NUMBER, -1);
+        const M2D_t& Dtran = t.graph.Dtran[i];
+        for (M2D_t::const_iterator it = Dtran.begin(); it != Dtran.end(); ++it)
+        {
+            plain[it->first] = it->second;
+        }
+        vector_to_buffer(plain);
+
+        snprintf(buffer, 512, "},\n");
+        string_to_buffer(buffer);
+    }
+
+    string_to_buffer(tail);
+}
+
+void Lex::FinishStates_to_buffer()
+{
+    vector<int> finishes(t.graph.DStates.size(), 0);
+
+    const pos_t& end_symbol_positions = t.symbol_follows[-1];
+
+    for (pos_t::const_iterator it = end_symbol_positions.begin();
+         it != end_symbol_positions.end(); ++it)
+    {
+        for (int i = 0; i < t.graph.DStates.size(); i++) {
+            if (t.graph.DStates[i].positions.find(*it) !=
+                t.graph.DStates[i].positions.end())
+            {
+                finishes[i] = 1;
+            }
+        }
+    }
+
+    char buffer[64];
+    const char *head = "static int lexi_Finished[%d] = {\n";
+    const char *tail = "};\n\n";
+    snprintf(buffer, 64, head, finishes.size());
+
+    string_to_buffer(buffer);
+    vector_to_buffer(finishes);
+    string_to_buffer(tail);
+}
+
+void Lex::Actions_to_buffer()
+{
+    set<int> bound_states;
+
+    char buffer[64];
+    const char *head = "case %d:\n";
+    const char *tail = "\nbreak;\n";
+
+    const pos_t& end_symbol_positions = t.symbol_follows[-1];
+
+    for (pos_t::const_iterator it = end_symbol_positions.begin();
+         it != end_symbol_positions.end(); ++it)
+    {
+        for (int i = 0; i < t.graph.DStates.size(); i++) {
+            if (t.graph.DStates[i].positions.find(*it) !=
+                t.graph.DStates[i].positions.end())
+            {
+                // check if added before
+                if (bound_states.count(i) > 0)
+                    continue;
+
+                // mark state
+                bound_states.insert(i);
+
+                // print action
+                snprintf(buffer, 64, head, i);
+                string_to_buffer(buffer);
+                std::copy(t.graph.actions[*it].begin(),
+                          t.graph.actions[*it].end(),
+                          std::back_inserter(out));
+                string_to_buffer(tail);
+            }
+        }
+    }
 }
 
 } /* lexi */

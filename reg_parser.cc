@@ -326,6 +326,14 @@ RegNode RegParser::node_closure(const RegNode& node)
     return RegNode(node.firstpos, node.lastpos, true);
 }
 
+static char int_to_char(int c) {
+    if (c < 0) return '$';
+    if (c == '\n') return ' ';
+    if (c == '\r') return ' ';
+
+    return (char)c;
+}
+
 void RegParser::print() const
 {
         printf("----------------------------\n");
@@ -341,7 +349,7 @@ void RegParser::print() const
             sprintf (buffer + k * 3, "%2d ", *j);
             ++k;
         }
-        printf("|    %c   | %15s |\n", (char)(it->first > 0 ? it->first : '$'), buffer);
+        printf("|    %c   | %15s |\n", int_to_char(it->first), buffer);
     }
         printf("----------------------------\n\n");
 
@@ -382,14 +390,14 @@ void RegParser::print() const
         printf("----------------------------\n");
         printf("|  State |          Dtran  |\n");
         printf("----------------------------\n");
-    for (DFAGraph::M3D_t::const_iterator it = graph.Dtran.begin();
+    for (M3D_t::const_iterator it = graph.Dtran.begin();
          it != graph.Dtran.end(); ++it)
     {
         char buffer[32] = { 0 }; int k = 0;
-        for (DFAGraph::M2D_t::const_iterator j = it->second.begin();
+        for (M2D_t::const_iterator j = it->second.begin();
              j != it->second.end(); ++j)
         {
-            sprintf (buffer + k * 4, "%c:%d ", (char)j->first, j->second);
+            sprintf (buffer + k * 4, "%c:%d ", int_to_char(j->first), j->second);
             ++k;
         }
         printf("|   %3d  | %15s |\n", it->first, buffer);

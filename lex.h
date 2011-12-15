@@ -1,17 +1,12 @@
 #ifndef LEXI_H
 #define LEXI_H
 
-#include <vector>
-#include <stdio.h>
+#include "buffer.h"
+#include "reg_parser.h"
 
-const int debug = 1;
+#define MAX_SYMBOL_NUMBER 129
 
 namespace lexi {
-    
-using std::vector;
-typedef std::vector<char> buffer_t;
-
-class RegParser;
 
 class Lex {
 public:
@@ -19,6 +14,10 @@ public:
 
     int parse();
 
+    // generate program
+    void generate_program();
+
+private:
     enum state_t {
         IN_CDECLARATION,
         IN_DEFINITION,
@@ -30,13 +29,17 @@ public:
     buffer_t& out;
     buffer_t in;
 
+    RegParser t;
+
+    buffer_t header, main;
+
     /* parsing phases */
 
     // parse c-declaration and definitions section
-    int parse_definitions(RegParser &t, size_t i);
+    int parse_definitions(size_t i);
 
     // parse rules section
-    int parse_rules(RegParser &t, size_t i);
+    int parse_rules(size_t i);
 
     // used for iterating buffer
     enum iterate_t {
@@ -60,6 +63,16 @@ public:
     size_t get_id(size_t i);
     size_t skip_spaces(size_t i);
     size_t skip_comments(size_t i);
+
+    // write file to buffer
+    void file_to_buffer(const char *file);
+    void string_to_buffer(const char *str);
+    void vector_to_buffer(const vector<int>& vec);
+
+    // push struct to buffer
+    void DTran_to_buffer();
+    void FinishStates_to_buffer();
+    void Actions_to_buffer();
 
 /* Not to be implemented */
 private:

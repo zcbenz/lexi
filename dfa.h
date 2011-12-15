@@ -1,19 +1,9 @@
 #ifndef DFA_H
 #define DFA_H
 
-#include <set>
-#include <map>
-
-#include "lex.h"
+#include "buffer.h"
 
 namespace lexi {
-
-using std::set;
-using std::map;
-
-typedef set<int> pos_t;
-typedef map<int, pos_t> postable_t;
-typedef vector<int> positions_t;
 
 struct DState {
     int id;
@@ -36,9 +26,6 @@ struct DState {
 };
 
 struct DFAGraph {
-    typedef map<int, int> M2D_t;
-    typedef map<int, M2D_t> M3D_t;
-
     vector<DState> DStates;
     M3D_t Dtran;
     map<int, buffer_t> actions;

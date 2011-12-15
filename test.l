@@ -1,21 +1,19 @@
-%{
-// In head
-%}
+
+id [a-z]* 
+ws [ \r\n]*
 
 %%
 
-if {
-    printf("if");
-}
+{ws} 
 
-[ ]* {
-
-}
-
-else {
-    printf("else");
-}
+{id}   printf("ID\n");
 
 %%
 
-// In the middle of programme
+int main(int argc, char *argv[])
+{
+    yylex();
+
+    return 0;
+}
+

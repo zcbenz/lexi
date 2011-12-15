@@ -75,7 +75,7 @@ Token RegLexer::dealChar()
     case '\\':
         value = *(++begin);
         ++begin;
-        return Token(TOKEN_CHAR, value);
+        return Token(TOKEN_CHAR, add_slash(value));
 
     case '$':
     case '|':

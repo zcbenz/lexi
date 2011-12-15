@@ -1,14 +1,9 @@
-#include "lex.h"
+#ifndef REG_LEXER_H
+#define REG_LEXER_H
 
-#include <set>
-#include <string>
-#include <map>
+#include "buffer.h"
 
 namespace lexi {
-    
-using std::set;
-using std::string;
-using std::map;
 
 enum TOKEN {
     TOKEN_SET = 0x100,
@@ -72,3 +67,5 @@ private:
 };
 
 } /* lexi */
+
+#endif /* end of REG_LEXER_H */
