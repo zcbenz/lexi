@@ -34,7 +34,7 @@ int Lex::parse()
     }
 
     t.generate_dfa();
-    t.print();
+//    t.print();
 }
 
 void Lex::generate_program()

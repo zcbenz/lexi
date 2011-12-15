@@ -121,8 +121,8 @@ Token RegLexer::dealSet()
             break;
         } else if (*begin == '-') {
             if (elems.size() < 1) {
-                fprintf (stderr, "Syntax error: range expects head but got %c\n", *(begin -1));
-                return Token();
+                ++begin;
+                return Token(TOKEN_CHAR, *begin);
             }
 
             char head = *(begin -1);

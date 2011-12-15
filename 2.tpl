@@ -5,6 +5,9 @@
 
 static FILE *yyin = NULL;
 
+static char yytext[512] = { 0 };
+static int yyleng = 0;
+
 void yylex();
 
 static void lexi_Action(int);

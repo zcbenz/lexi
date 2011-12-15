@@ -11,6 +11,8 @@ void yylex()
     int state = 0;
     char ch;
     for (ch = fgetc(yyin); ch != EOF;) {
+        yytext[yyleng++] = ch;
+
         state = lexi_DTran[state][(int)ch];
 
         // when found one match we keep chars into lookback buffer 
@@ -26,20 +28,30 @@ void yylex()
         if (state == -1) {
             // go back to last match
             if (success > -1) {
-                lexi_Action(success);
+                // get right yyleng
+                yyleng -= count;
+                yytext[yyleng] = 0;
 
                 // give back chars
                 while(count > 0)
                     ungetc(buffer[--count], yyin);
+
+                lexi_Action(success);
             } else {
                 fprintf (stderr, "Invalid: %c\n", ch);
             }
 
             state = 0;
+            count = 0;
             success = -1;
+
+            // reset yyleng and yytext
+            yyleng = 0;
+            yytext[0] = 0;
         } else if (lexi_Finished[state]) {
             // found match, wait for longer match
             success = state;
+            // and discard old lookback buffer
             count = 0;
         }
 
