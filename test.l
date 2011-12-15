@@ -1,3 +1,6 @@
+%{
+// In head
+%}
 
 expr1 [ab]*abb
 
@@ -8,3 +11,5 @@ expr1 [ab]*abb
 }
 
 %%
+
+// In the middle of programme

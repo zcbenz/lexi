@@ -7,17 +7,19 @@
 namespace lexi {
 
 struct RegNode {
+    int id;
+
     pos_t firstpos;
     pos_t lastpos;
     bool nullable;
 
-    RegNode() : nullable(true)
+    RegNode() : nullable(true), id(-1)
     {
     }
 
     RegNode(const set<int>& firstpos, const set<int>& lastpos,
             bool nullable)
-        : firstpos(firstpos), lastpos(lastpos), nullable(nullable)
+        : firstpos(firstpos), lastpos(lastpos), nullable(nullable), id(-1)
     {
     }
 };
@@ -31,8 +33,10 @@ public:
     void definition(buffer_t::const_iterator begin,
                     buffer_t::const_iterator end);
 
-    int rule(buffer_t::const_iterator begin,
-             buffer_t::const_iterator end);
+    void rule(buffer_t::const_iterator begin,
+              buffer_t::const_iterator end);
+
+    void generate_dfa();
 
     // print followpos table and symbol_follows
     void print() const;
@@ -62,6 +66,8 @@ private:
 
     RegLexer lex;
     Token peek;
+
+    RegNode root;
 
     DFAGraph graph;
 };

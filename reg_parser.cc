@@ -26,14 +26,13 @@ void RegParser::definition(buffer_t::const_iterator begin,
     defis.insert(map<string, RegNode>::value_type(name, reg_root));
 }
 
-int RegParser::rule(buffer_t::const_iterator begin,
-                   buffer_t::const_iterator end)
+void RegParser::rule(buffer_t::const_iterator begin,
+                     buffer_t::const_iterator end)
 {
     lex.init(begin, end);
 
-    if(!lex.skip_blanks()) {
-        return -1;
-    }
+    if(!lex.skip_blanks())
+        return;
 
     peek = lex.next();
     RegNode reg_root = E();
@@ -43,11 +42,23 @@ int RegParser::rule(buffer_t::const_iterator begin,
     RegNode reg_end = F();
     reg_root = node_cat(reg_root, reg_end);
 
-    size_t i = graph.DStates.size();
-    size_t start = graph.push_back(reg_root.firstpos)->id;
+    // Combine with old root
+    // eg: new_root = old_root | new_root
+    root = node_or(root, reg_root);
+
+    // Keep action record
+    lex.skip_blanks();
+    graph.actions.insert(make_pair(reg_end.id, lex.get_action()));
+}
+
+void RegParser::generate_dfa()
+{
+    size_t i = 0;
+    graph.clear();
+    graph.push_back(root.firstpos);
 
     for (; i < graph.DStates.size(); ++i) {
-        DState& state = graph.DStates[i];
+        const DState& state = graph.DStates.at(i);
 
         // spit state.positions into group[a,b,c][1,2,3]
         postable_t group;
@@ -64,6 +75,8 @@ int RegParser::rule(buffer_t::const_iterator begin,
              it != group.end(); ++it)
         {
             int path = it->first;
+
+            // encountered $
             if (path == -1) {
                 continue;
             }
@@ -80,17 +93,13 @@ int RegParser::rule(buffer_t::const_iterator begin,
 
             // Dtran[A, a] = positions
             if (next.size() > 0) {
-                graph.Dtran[state.id][path] = graph.push_back(next)->id;
+                DState &new_state = graph.push_back(next);
+                graph.Dtran[i][path] = new_state.id;
             } else {
-                graph.Dtran[state.id][path] = -1;
+                graph.Dtran[i][path] = -1;
             }
         }
     }
-
-    lex.skip_blanks();
-    graph.actions.insert(make_pair(start, lex.get_action()));
-
-    return start;
 }
 
 RegNode RegParser::E()
@@ -227,6 +236,7 @@ RegNode RegParser::F()
             positions.push_back(peek.tag);
         }
 
+        sub.id = id;
         sub.nullable = false;
         sub.firstpos.insert(id);
         sub.lastpos.insert(id);

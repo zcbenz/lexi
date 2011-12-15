@@ -30,6 +30,11 @@ int Lex::parse()
         return i; 
     }
 
+    if (state == IN_PROGRAM) {
+        std::copy(in.begin() + i, in.end(), std::back_inserter(out));
+    }
+
+    t.generate_dfa();
     t.print();
 }
 
