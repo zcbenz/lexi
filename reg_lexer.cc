@@ -121,8 +121,9 @@ Token RegLexer::dealSet()
             break;
         } else if (*begin == '-') {
             if (elems.size() < 1) {
+                elems.push_back(*begin);
                 ++begin;
-                return Token(TOKEN_CHAR, *begin);
+                continue;
             }
 
             char head = *(begin -1);

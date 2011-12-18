@@ -1,23 +1,48 @@
 #include "lex.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <algorithm>
 #include <iterator>
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
-    lexi::buffer_t in, out;
+    const char *name = *argv;
+
+    int verbose = 0;
+    if (argc > 1 && !strcmp(argv[1], "-v")) {
+        argc -= 1;
+        argv++;
+    }
+
+    if (argc < 2) {
+        printf("Usage: %s [-v] input [output]\n", name);
+        return 1;
+    }
+
+    // parse input/output name
+    char buffer[512];
+    const char *input = argv[1];
+    const char *output = buffer;
+    if (argc > 2) {
+        output = argv[2];
+    } else {
+        sprintf(buffer, "%s.c", input);
+    }
 
     // read file
-    FILE *file = fopen("test.l", "r+"); char ch;
+    lexi::buffer_t in, out;
+    FILE *file = fopen(input, "r+"); char ch;
     while ((ch = fgetc(file)) != EOF) in.push_back(ch);
     fclose(file);
 
+    // parse rules
     lexi::Lex parser(in, out);
     parser.parse();
     parser.generate_program();
 
-    file = fopen("test.l.c", "w+");
+    // write file
+    file = fopen(output, "w+");
     out.push_back('\0');
     fputs(out.data(), file);
     fclose(file);
