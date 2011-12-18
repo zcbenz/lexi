@@ -80,6 +80,8 @@ Token RegLexer::dealChar()
     case '$':
     case '|':
     case '*':
+    case '?':
+    case '+':
     case '(':
     case ')':
         return Token(*(begin++));

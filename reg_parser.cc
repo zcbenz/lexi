@@ -152,35 +152,32 @@ RegNode RegParser::C()
 
 RegNode RegParser::S()
 {
-    if (debug) fprintf (stderr, "Enter S\n");
-
     RegNode sub = F();
-    if (peek && peek.tag == '*') {
-        if (debug) fprintf (stderr, "Star node\n");
-
-        peek = lex.next();
-        return node_closure(sub);
+    if (peek) {
+        switch (peek.tag) {
+        case '*':
+            peek = lex.next();
+            return node_closure(sub);
+        case '+':
+            peek = lex.next();
+            return node_cat(sub, node_closure(sub));
+        case '?':
+            peek = lex.next();
+            sub.nullable = true;
+            return sub;
+        }
     }
-
-    if (!peek && debug)
-        fprintf (stderr, "End at the end of S\n");
-    else if (debug)
-        fprintf (stderr, "Leave S\n");
 
     return sub;
 }
 
 RegNode RegParser::F()
 {
-    if (debug) fprintf (stderr, "Enter F\n");
-
     RegNode sub;
     int id;
 
     switch (peek.tag) {
     case '(' :
-        if (debug) fprintf (stderr, "Found (\n");
-
         peek = lex.next();
         sub = E();
 
@@ -193,12 +190,10 @@ RegNode RegParser::F()
         break;
 
     case TOKEN_DIFI:
-        if (debug) fprintf (stderr, "Leaf Defi: %s\n", peek.str.c_str());
-
         if (defis.find(peek.str) != defis.end()) {
             sub = defis.find(peek.str)->second;
         } else {
-            if (debug) fprintf (stderr, "Not found\n");
+            fprintf (stderr, "Invalid definition: %s\n", peek.str.c_str());
         }
 
         break;
