@@ -26,8 +26,8 @@ private:
         IN_INVALID
     } state;
 
-    buffer_t& out;
     buffer_t in;
+    buffer_t& out;
 
     RegParser t;
 

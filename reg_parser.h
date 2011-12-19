@@ -13,13 +13,13 @@ struct RegNode {
     pos_t lastpos;
     bool nullable;
 
-    RegNode() : nullable(true), id(-1)
+    RegNode() : id(-1), nullable(true)
     {
     }
 
     RegNode(const set<int>& firstpos, const set<int>& lastpos,
             bool nullable)
-        : firstpos(firstpos), lastpos(lastpos), nullable(nullable), id(-1)
+        : id(-1), firstpos(firstpos), lastpos(lastpos), nullable(nullable)
     {
     }
 };

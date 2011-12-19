@@ -34,7 +34,7 @@ int Lex::parse()
     }
 
     t.generate_dfa();
-//    t.print();
+    return 0;
 }
 
 void Lex::generate_program()
@@ -113,9 +113,17 @@ int Lex::parse_rules(size_t i)
             // TODO
             // expand multiple lines for {
             // }
+            while (i < in.size() && !isspace(in[i])) ++i;
+            i = skip_spaces(i);
+            if (in[i] == '{') {
+                while (i < in.size() && in[i] != '}') i++;
+                if (i != in.size()) {
+                    iend = in.begin() + i + 1;
+                }
+            }
 
-            i = iend - in.begin();
             t.rule(ibegin, iend);
+            i = iend - in.begin();
         }
     }
 
@@ -150,6 +158,7 @@ unsigned Lex::state_increment()
     }
 
     state = (state_t)((unsigned)state + 1);
+    return state;
 }
 
 bool Lex::compare_next(size_t i, const char *mark)
@@ -208,6 +217,8 @@ size_t Lex::get_id(size_t i)
 size_t Lex::skip_spaces(size_t i)
 {
     while (i < in.size() && isblank(in[i])) ++i;
+
+    return i; 
 }
 
 size_t Lex::skip_comments(size_t i)
@@ -247,7 +258,7 @@ void Lex::string_to_buffer(const char *str)
 void Lex::vector_to_buffer(const vector<int>& vec)
 {
     char buffer[64];
-    for (int i = 0; i < vec.size(); i++) {
+    for (size_t i = 0; i < vec.size(); i++) {
         snprintf(buffer, 64, "%2d, ", vec[i]);
         string_to_buffer(buffer);
 
@@ -265,7 +276,7 @@ void Lex::DTran_to_buffer()
     snprintf(buffer, 512, head, t.graph.DStates.size(), MAX_SYMBOL_NUMBER);
     string_to_buffer(buffer);
 
-    for (int i = 0; i < t.graph.DStates.size(); i++) {
+    for (size_t i = 0; i < t.graph.DStates.size(); i++) {
         snprintf(buffer, 512, "{\n");
         string_to_buffer(buffer);
 
@@ -293,7 +304,7 @@ void Lex::FinishStates_to_buffer()
     for (pos_t::const_iterator it = end_symbol_positions.begin();
          it != end_symbol_positions.end(); ++it)
     {
-        for (int i = 0; i < t.graph.DStates.size(); i++) {
+        for (size_t i = 0; i < t.graph.DStates.size(); i++) {
             if (t.graph.DStates[i].positions.find(*it) !=
                 t.graph.DStates[i].positions.end())
             {
@@ -325,7 +336,7 @@ void Lex::Actions_to_buffer()
     for (pos_t::const_iterator it = end_symbol_positions.begin();
          it != end_symbol_positions.end(); ++it)
     {
-        for (int i = 0; i < t.graph.DStates.size(); i++) {
+        for (size_t i = 0; i < t.graph.DStates.size(); i++) {
             if (t.graph.DStates[i].positions.find(*it) !=
                 t.graph.DStates[i].positions.end())
             {

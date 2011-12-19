@@ -1,5 +1,5 @@
 lexi: *.cc *.h
-	g++ -g *.cc -o lexi
+	g++ -Wall -g *.cc -o lexi
 
 run:
 	./lexi

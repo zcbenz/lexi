@@ -142,11 +142,6 @@ RegNode RegParser::C()
 
     RegNode right = C();
 
-    if (!peek && debug)
-        fprintf (stderr, "End at the right of C\n");
-    else if (debug)
-        fprintf (stderr, "Leave C\n");
-
     return node_cat(left, right);
 }
 

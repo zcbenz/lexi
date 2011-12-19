@@ -9,8 +9,9 @@ int main(int argc, char **argv)
 {
     const char *name = *argv;
 
-    int verbose = 0;
+//    int verbose = 0;
     if (argc > 1 && !strcmp(argv[1], "-v")) {
+//        verbose = 1;
         argc -= 1;
         argv++;
     }
